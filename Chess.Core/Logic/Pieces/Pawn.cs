@@ -1,27 +1,24 @@
-using Chess.Core.Logic.Constants;
-
 namespace Chess.Core.Logic.Pieces;
 
 public class Pawn : Piece
 {
-    public Pawn(Color pieceColor) : base(pieceColor)
+    public Pawn(Color color) : base(color)
     {
+        FenChar = Color == Color.White ? Logic.FenChar.WhitePawn : Logic.FenChar.NiggaPawn;
     }
 
-    protected override char FenChar() =>
-        PieceColor == Color.White ? Constants.FenChar.WhitePawn : Constants.FenChar.NiggaPawn;
+    public sealed override char FenChar { get; set; }
 
-    protected override Coords[] Directions() =>
-        new[]
-        {
-            new Coords(1, 0),
-            new Coords(2, 0),
-            new Coords(1, 1),
-            new Coords(1, -1)
-        };
+    public override Coords[] Directions { get; set; } =
+    {
+        new(1, 0),
+        new(2, 0),
+        new(1, 1),
+        new(1, -1)
+    };
 
     private void SetBlackPawnDirection()
     {
-        this.Directions() = this.Directions().Select(coord => coord with { X = -1 * coord.X });
+        Directions = Directions.Select(coord => coord with { X = -1 * coord.X }).ToArray();
     }
 }

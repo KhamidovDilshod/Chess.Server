@@ -1,12 +1,10 @@
 namespace Chess.Core.Logic.Pieces;
 
-public class King : Piece
+public class Queen : Piece
 {
-    private bool _hasMoved = false;
-
-    public King(Color pieceColor) : base(pieceColor)
+    public Queen(Color pieceColor) : base(pieceColor)
     {
-        FenChar = Color == Color.White ? Logic.FenChar.WhiteKing : Logic.FenChar.NiggaKing;
+        FenChar = Color == Color.White ? Logic.FenChar.WhiteQueen : Logic.FenChar.NiggaQueen;
     }
 
     public sealed override char FenChar { get; set; }

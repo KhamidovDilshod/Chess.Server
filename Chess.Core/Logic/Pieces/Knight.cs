@@ -1,26 +1,23 @@
-using Chess.Core.Logic.Constants;
-
 namespace Chess.Core.Logic.Pieces;
 
 public class Knight : Piece
 {
     public Knight(Color pieceColor) : base(pieceColor)
     {
+        FenChar = Color == Color.White ? Logic.FenChar.WhiteKnight : Logic.FenChar.NiggaKnight;
     }
 
-    protected override char FenChar() =>
-        PieceColor == Color.White ? Constants.FenChar.WhiteKnight : Constants.FenChar.NiggaKnight;
+    public sealed override char FenChar { get; set; }
 
-    protected override Coords[] Directions()
-        => new[]
-        {
-            new Coords(1, 2),
-            new Coords(1, -2),
-            new Coords(-1, 2),
-            new Coords(-1, -2),
-            new Coords(2, 1),
-            new Coords(2, -1),
-            new Coords(-2, 1),
-            new Coords(-2, -1)
+    public override Coords[] Directions { get; set; }
+        = {
+            new(1, 2),
+            new(1, -2),
+            new(-1, 2),
+            new(-1, -2),
+            new(2, 1),
+            new(2, -1),
+            new(-2, 1),
+            new(-2, -1)
         };
 }

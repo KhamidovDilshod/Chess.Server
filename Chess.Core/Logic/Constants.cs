@@ -1,4 +1,6 @@
-namespace Chess.Core.Logic.Constants;
+using Chess.Core.Logic.Pieces;
+
+namespace Chess.Core.Logic;
 
 public class FenChar
 {
@@ -23,3 +25,9 @@ public enum Color
 }
 
 public record Coords(int X, int Y);
+
+public record SquareWithoutPiece(Piece? Piece);
+
+public record SquareWithPiece(Piece Piece, int PrevX, int PrevY, int CurrX, int CurrY);
+
+public record CheckState(bool IsInCheck, int X = 0, int Y = 0);

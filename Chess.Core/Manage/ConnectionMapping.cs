@@ -4,7 +4,7 @@ namespace Chess.Core.Manage;
 
 public class ConnectionMapping<T> where T : notnull
 {
-    private readonly Dictionary<T, HashSet<string>> _connections = new Dictionary<T, HashSet<string>>();
+    private readonly Dictionary<T, HashSet<string>> _connections = new();
 
     public int Count => _connections.Count;
 

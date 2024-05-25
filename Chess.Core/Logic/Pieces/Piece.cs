@@ -1,16 +1,14 @@
-using Chess.Core.Logic.Constants;
-
 namespace Chess.Core.Logic.Pieces;
 
-public   class Piece
+public abstract class Piece
 {
-    protected virtual char FenChar;
-    protected virtual Coords[] Directions();
+    public abstract char FenChar { get; set; }
+    public abstract Coords[] Directions { get; set; }
 
-    public Piece(Color pieceColor)
+    public Piece(Color color)
     {
-        PieceColor = pieceColor;
+        Color = color;
     }
-    
-    public Color PieceColor { get; }
+
+    public Color Color { get; }
 }
