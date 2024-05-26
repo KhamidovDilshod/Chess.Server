@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace Chess.Core;
+namespace Chess.Core.SignalR;
 
 public class HubBase : Hub
 {

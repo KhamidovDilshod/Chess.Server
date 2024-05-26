@@ -21,7 +21,10 @@ public class FenChar
 public enum Color
 {
     White,
-    Nigga
+    Nigga,
+
+    //For spectators
+    Null
 }
 
 public record Coords(int X, int Y);

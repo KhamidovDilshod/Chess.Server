@@ -1,12 +1,8 @@
-﻿// ReSharper disable InconsistentlySynchronizedField
-
-namespace Chess.Core.Manage;
+﻿namespace Chess.Core.SignalR;
 
 public class ConnectionMapping<T> where T : notnull
 {
     private readonly Dictionary<T, HashSet<string>> _connections = new();
-
-    public int Count => _connections.Count;
 
     public void Add(T key, string connectionId)
     {
@@ -26,7 +22,12 @@ public class ConnectionMapping<T> where T : notnull
     }
 
     public IEnumerable<string> GetConnections(T key)
-        => _connections.TryGetValue(key, out var connections) ? connections : Enumerable.Empty<string>();
+    {
+        lock (_connections)
+        {
+            return _connections.TryGetValue(key, out var connections) ? connections : Enumerable.Empty<string>();
+        }
+    }
 
     public void Remove(T key, string connectionId)
     {

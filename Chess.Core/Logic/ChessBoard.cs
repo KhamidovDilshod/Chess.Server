@@ -2,7 +2,7 @@ using Chess.Core.Logic.Pieces;
 
 namespace Chess.Core.Logic;
 
-public class Board
+public class ChessBoard
 {
     private readonly Piece?[][] _chessBoard;
     private const Color PlayerColor = Color.White;
@@ -20,35 +20,31 @@ public class Board
         }
     }
 
-    public Board()
+    public ChessBoard()
     {
-        _chessBoard = new[]
-        {
-            new Piece[]
-            {
+        _chessBoard =
+        [
+            [
                 new Rook(Color.White), new Knight(Color.White), new Bishop(Color.White), new Queen(Color.White),
                 new King(Color.White), new Bishop(Color.White), new Knight(Color.White), new Rook(Color.White)
-            },
-            new Piece[]
-            {
+            ],
+            [
                 new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White),
                 new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White)
-            },
-            new Piece[] { null, null, null, null, null, null, null, null },
-            new Piece[] { null, null, null, null, null, null, null, null },
-            new Piece[] { null, null, null, null, null, null, null, null },
-            new Piece[] { null, null, null, null, null, null, null, null },
-            new Piece[]
-            {
+            ],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [
                 new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga),
                 new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga)
-            },
-            new Piece[]
-            {
+            ],
+            [
                 new Rook(Color.Nigga), new Knight(Color.Nigga), new Bishop(Color.Nigga), new Queen(Color.Nigga),
                 new King(Color.Nigga), new Bishop(Color.Nigga), new Knight(Color.Nigga), new Rook(Color.Nigga)
-            }
-        };
+            ]
+        ];
         _safeSquares = FindSafeSquares();
     }
 
@@ -64,7 +60,7 @@ public class Board
 
                 if (piece is null || piece.Color != PlayerColor) continue;
 
-                List<Coords> pieceSafeSquares = new();
+                List<Coords> pieceSafeSquares = [];
 
                 foreach (var (dx, dy) in piece.Directions)
                 {
