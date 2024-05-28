@@ -12,10 +12,10 @@ public class UserManager(IMongoDatabase db) : BaseManager<User, UserModel, long>
     protected override Expression<Func<User, UserModel>> EntityToModel => e =>
         new UserModel(e.Id, e.Username, e.Email, e.Date);
 
-    public async ValueTask<UserModel> CreateUserAsync(UserCreate userCreate)
+    public async ValueTask<UserModel> GetOrCreateUserAsync(UserCreate userCreate)
     {
-        var isExist = await Database.Users.AnyAsync(u => u.Email == userCreate.Email);
-        if (isExist) throw new Exception($"User with email:{userCreate.Email} already exisats");
+        var existingUser = await Database.Users.FirstOrDefaultAsync(u => u.Email == userCreate.Email);
+        if (existingUser is not null) return EntityToModel.Compile().Invoke(existingUser);
 
         var user = User.Create(userCreate.Email, userCreate.Username, userCreate.LogoUrl);
         return await Add(user);

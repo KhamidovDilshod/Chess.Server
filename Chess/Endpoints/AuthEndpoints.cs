@@ -17,7 +17,7 @@ public static class AuthEndpoints
 
         app.MapPost("users", async (UserManager manager, UserCreate userCreate) =>
         {
-            var user = await manager.CreateUserAsync(userCreate);
+            var user = await manager.GetOrCreateUserAsync(userCreate);
             return Results.Ok(user);
         });
     }
