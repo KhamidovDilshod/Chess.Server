@@ -7,7 +7,7 @@ using MongoDB.Driver;
 
 namespace Chess.Core.Manage;
 
-public class UserManager(IMongoDatabase db) : BaseManager<User, UserModel, long>(db)
+public class UserManager(IMongoDatabase db) : BaseManager<User, UserModel, Guid>(db)
 {
     protected override Expression<Func<User, UserModel>> EntityToModel => e =>
         new UserModel(e.Id, e.Username, e.Email, e.Date);

@@ -6,8 +6,8 @@ namespace Chess.Core.Persistence.Entities;
 public class Game : Entity
 {
     public Guid BoardId { get; set; }
-    public List<GamePlayer> Players { get; init; } = [];
-    public List<Move> Moves { get; init; } = [];
+    public List<GamePlayer> Players { get; init; } = new();
+    public List<Move> Moves { get; init; } = new();
     public Board? Board { get; set; }
 
     public static Game Init(InitGame init)

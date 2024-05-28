@@ -9,7 +9,7 @@ public record InitGame(List<Player>? Players = null);
 
 public record GameModel(Guid Id, DateTime Date, List<Player> Players, BoardModel Board);
 
-public record Player(long UserId, Guid? GameId, Color Color);
+public record Player(Guid UserId, Guid? GameId, Color Color);
 
 #endregion
 
@@ -17,7 +17,7 @@ public record Player(long UserId, Guid? GameId, Color Color);
 
 public record MoveModel(Guid Id, Guid GameId, int Number, string Notation);
 
-public record AddMove(Guid GameId, long UserId, int Number, string Notation);
+public record AddMove(Guid GameId, Guid UserId, int Number, string Notation);
 
 #endregion
 
@@ -29,7 +29,7 @@ public record BoardModel(string[][] State);
 
 #region User
 
-public record UserModel(long Id, string Username, string Email, DateTime Date);
+public record UserModel(Guid Id, string Username, string Email, DateTime Date);
 
 public record UserCreate(string Username, string Email, string LogoUrl);
 

@@ -1,9 +1,12 @@
 using Chess.Core.Extensions;
 using Chess.Core.SignalR;
 using Chess.Endpoints;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSignalR();
+builder.Host.UseSerilog(ServiceRegistrationExt.Configure);
+
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddManagers();

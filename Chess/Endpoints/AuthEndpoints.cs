@@ -7,7 +7,7 @@ public static class AuthEndpoints
 {
     public static void AddAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("users/{id:long}", async (UserManager manager, long id) =>
+        app.MapGet("users/{id}", async (UserManager manager, Guid id) =>
         {
             var user = await manager.Get(id);
             return user is null ? Results.NotFound() : Results.Ok(user);

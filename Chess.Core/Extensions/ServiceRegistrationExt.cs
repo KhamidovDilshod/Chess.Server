@@ -2,7 +2,11 @@ using System.Reflection;
 using Chess.Core.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
+using Serilog;
+using Serilog.Events;
+using Serilog.Settings.Configuration;
 
 namespace Chess.Core.Extensions;
 
@@ -64,4 +68,28 @@ public static class ServiceRegistrationExt
 
         return false;
     }
+     public static Action<HostBuilderContext, LoggerConfiguration> Configure =>
+        (context, configuration) =>
+        {
+
+            configuration
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Application", context.HostingEnvironment.ApplicationName)
+                .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
+                .Destructure.ToMaximumDepth(9)
+                .Filter.ByExcluding(e =>
+                {
+                    if (e.Properties.TryGetValue("RequestPath", out var path)
+                        && path.ToString().Contains("/hc"))
+                    {
+                        return true;
+                    }
+                    return false;
+                })
+                .WriteTo.Console()
+                .WriteTo.Debug();
+            
+
+            configuration.ReadFrom.Configuration(context.Configuration, readerOptions: new ConfigurationReaderOptions(typeof(ConsoleLoggerConfigurationExtensions).Assembly));
+        };
 }

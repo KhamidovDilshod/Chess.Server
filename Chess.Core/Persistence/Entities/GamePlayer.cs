@@ -3,9 +3,9 @@ using Chess.Core.Models;
 
 namespace Chess.Core.Persistence.Entities;
 
-public class GamePlayer : Entity<Guid>
+public class GamePlayer : Entity
 {
-    public long UserId { get; set; }
+    public Guid UserId { get; set; }
     public Guid GameId { get; set; }
     public Color Color { get; set; }
 
