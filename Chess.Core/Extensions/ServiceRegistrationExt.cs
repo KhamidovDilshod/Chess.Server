@@ -1,8 +1,10 @@
 using System.Reflection;
 using Chess.Core.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using Serilog.Events;
@@ -92,4 +94,18 @@ public static class ServiceRegistrationExt
 
             configuration.ReadFrom.Configuration(context.Configuration, readerOptions: new ConfigurationReaderOptions(typeof(ConsoleLoggerConfigurationExtensions).Assembly));
         };
+
+     public static void AddGoogleAuth(this IServiceCollection services, IConfiguration configuration)
+         => services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+             .AddJwtBearer(options =>
+             {
+                 options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidateIssuer = true,
+                     ValidIssuer = configuration["ValidIssuer"],
+                     ValidateAudience = true,
+                     ValidAudience = configuration["ValidAudience"],
+                     ClockSkew=TimeSpan.Zero
+                 };
+             });
 }

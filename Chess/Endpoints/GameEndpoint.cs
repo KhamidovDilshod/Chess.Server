@@ -9,7 +9,7 @@ public static class GameEndpoint
     {
         app.MapGet("game/{gameId}", async (GameManager manager, Guid gameId) =>
         {
-            var result = await manager.Get(gameId);
+            var result = await manager.GetById(gameId);
             return result is null ? Results.NotFound() : Results.Ok(result);
         });
 

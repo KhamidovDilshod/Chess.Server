@@ -9,14 +9,14 @@ using MongoDB.Driver;
 
 namespace Chess.Core.Manage;
 
-public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel,Guid>(db)
+public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>(db)
 {
     protected override Expression<Func<Game, GameModel>> EntityToModel => e
         => new GameModel(
             e.Id,
             e.Date,
             e.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList(),
-            new BoardModel(e.Board.State.Deserialize<string[][]>(JsonSerializerOptions))
+            new BoardModel(JsonSerializer.Deserialize<string[][]>(e.Board.StateJson, JsonSerializerOptions))
         );
 
     public async ValueTask<GameModel> InitGameAsync(InitGame init)
@@ -25,7 +25,7 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel,Guid>(
         var board = new ChessBoard().ChessBoardView;
         game.Board = new Board
         {
-            State = JsonSerializer.SerializeToDocument(board)
+            StateJson = JsonSerializer.Serialize(board)
         };
         return await Add(game);
     }
@@ -36,6 +36,45 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel,Guid>(
         if (game is null) return null;
         game.AssignPlayer(player);
         await Database.SaveChangesAsync();
-        return EntityToModel.Compile().Invoke(game);
+        return ToGameModel(game);
+    }
+
+    public async Task<GameModel?> GetById(Guid id)
+    {
+        // Fetch the game entity by ID
+        var game = await Database.Games
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        // Explicitly load related entities if they are not automatically loaded
+        if (game == null) return ToGameModel(game);
+        {
+            await Database.Entry(game)
+                .Collection(g => g.Players)
+                .LoadAsync();
+
+            await Database.Entry(game)
+                .Reference(g => g.Board)
+                .LoadAsync();
+        }
+
+        // Convert the entity to the model
+        return ToGameModel(game);
+    }
+
+    private GameModel? ToGameModel(Game? game)
+    {
+        if (game is null) return null;
+        return new GameModel(
+            game.Id,
+            game.Date,
+            game.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList(),
+            ToBoardModel(game.Board));
+    }
+
+    private BoardModel? ToBoardModel(Board? board)
+    {
+        return string.IsNullOrEmpty(board?.StateJson)
+            ? null
+            : new BoardModel(JsonSerializer.Deserialize<string[][]>(board.StateJson, JsonSerializerOptions) ?? []);
     }
 }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Chess.Core.Persistence.Entities;
 
-public class User : Entity<Guid>
+public class User : Entity
 {
     [MaxLength(60)] public required string Username { get; set; }
     [MaxLength(70)] public required string Email { get; set; }

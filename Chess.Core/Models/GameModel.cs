@@ -1,5 +1,4 @@
 using Chess.Core.Logic;
-using Chess.Core.Persistence.Entities;
 
 namespace Chess.Core.Models;
 
@@ -7,7 +6,7 @@ namespace Chess.Core.Models;
 
 public record InitGame(List<Player>? Players = null);
 
-public record GameModel(Guid Id, DateTime Date, List<Player> Players, BoardModel Board);
+public record GameModel(Guid Id, DateTime Date, List<Player> Players, BoardModel? Board);
 
 public record Player(Guid UserId, Guid? GameId, Color Color);
 
