@@ -15,8 +15,7 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
         => new GameModel(
             e.Id,
             e.Date,
-            e.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList(),
-            new BoardModel(JsonSerializer.Deserialize<string[][]>(e.Board.StateJson, JsonSerializerOptions))
+            e.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList()
         );
 
     public async ValueTask<GameModel> InitGameAsync(InitGame init)
@@ -51,14 +50,17 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
             await Database.Entry(game)
                 .Collection(g => g.Players)
                 .LoadAsync();
-
-            await Database.Entry(game)
-                .Reference(g => g.Board)
-                .LoadAsync();
         }
 
         // Convert the entity to the model
         return ToGameModel(game);
+    }
+
+    public async ValueTask<BoardModel?> GetBoardByGameId(Guid gameId)
+    {
+        var board = await Database.Boards.Where(b => b.GameId == gameId)
+            .FirstOrDefaultAsync();
+        return ToBoardModel(board);
     }
 
     private GameModel? ToGameModel(Game? game)
@@ -67,14 +69,14 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
         return new GameModel(
             game.Id,
             game.Date,
-            game.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList(),
-            ToBoardModel(game.Board));
+            game.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList());
     }
 
     private BoardModel? ToBoardModel(Board? board)
     {
         return string.IsNullOrEmpty(board?.StateJson)
             ? null
-            : new BoardModel(JsonSerializer.Deserialize<string[][]>(board.StateJson, JsonSerializerOptions) ?? []);
+            : new BoardModel(JsonSerializer.Deserialize<string[][]>(board.StateJson, JsonSerializerOptions) ??
+                             Array.Empty<string[]>());
     }
 }

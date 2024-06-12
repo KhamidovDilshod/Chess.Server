@@ -6,7 +6,7 @@ namespace Chess.Core.Models;
 
 public record InitGame(List<Player>? Players = null);
 
-public record GameModel(Guid Id, DateTime Date, List<Player> Players, BoardModel? Board);
+public record GameModel(Guid Id, DateTime Date, List<Player> Players);
 
 public record Player(Guid UserId, Guid? GameId, Color Color);
 

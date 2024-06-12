@@ -8,7 +8,7 @@ public class ChessBoard
     private const Color PlayerColor = Color.White;
     private const int BoardSize = 8;
     private Dictionary<string, Coords[]> _safeSquares;
-    private CheckState _checkState = new CheckState(false);
+    private CheckState _checkState = new(false);
 
     public string[][] ChessBoardView
     {
@@ -23,28 +23,58 @@ public class ChessBoard
     public ChessBoard()
     {
         _chessBoard =
-        [
-            [
-                new Rook(Color.White), new Knight(Color.White), new Bishop(Color.White), new Queen(Color.White),
-                new King(Color.White), new Bishop(Color.White), new Knight(Color.White), new Rook(Color.White)
-            ],
-            [
-                new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White),
-                new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White)
-            ],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [
-                new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga),
-                new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga)
-            ],
-            [
-                new Rook(Color.Nigga), new Knight(Color.Nigga), new Bishop(Color.Nigga), new Queen(Color.Nigga),
-                new King(Color.Nigga), new Bishop(Color.Nigga), new Knight(Color.Nigga), new Rook(Color.Nigga)
-            ]
-        ];
+            new[]
+            {
+                new Piece[]
+                {
+                    new Rook(Color.White),
+
+                    new Knight(Color.White), new Bishop(Color.White), new Queen(Color.White),
+                    new King(Color.White), new Bishop(Color.White), new Knight(Color.White), new Rook(Color.White)
+                },
+
+                new Piece[]
+                {
+                    new Pawn(Color.White),
+                    new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White),
+                    new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White), new Pawn(Color.White)
+                },
+                new Piece[]
+                {
+                    null,
+                    null, null, null, null, null, null, null
+                },
+                new Piece[]
+                {
+                    null,
+                    null, null, null, null, null, null, null
+                },
+                new Piece[]
+                {
+                    null,
+                    null, null, null, null, null, null, null
+                },
+                new Piece[]
+                {
+                    null,
+                    null, null, null, null, null, null, null
+                },
+                new Piece[]
+                {
+                    new Pawn(Color.Nigga),
+
+                    new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga),
+                    new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga), new Pawn(Color.Nigga)
+                },
+                new Piece[]
+                {
+                    new Rook(Color.Nigga),
+
+                    new Knight(Color.Nigga), new Bishop(Color.Nigga), new Queen(Color.Nigga),
+                    new King(Color.Nigga), new Bishop(Color.Nigga), new Knight(Color.Nigga), new Rook(Color.Nigga)
+                }
+            }
+            ;
         _safeSquares = FindSafeSquares();
     }
 
@@ -60,7 +90,8 @@ public class ChessBoard
 
                 if (piece is null || piece.Color != PlayerColor) continue;
 
-                List<Coords> pieceSafeSquares = [];
+                List<Coords> pieceSafeSquares = new();
+                ;
 
                 foreach (var (dx, dy) in piece.Directions)
                 {
