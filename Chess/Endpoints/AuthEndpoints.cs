@@ -16,9 +16,6 @@ public static class AuthEndpoints
         app.MapGet("users", async (UserManager manager) => Results.Ok(await manager.GetAll()));
 
         app.MapPost("users", async (UserManager manager, UserCreate userCreate) =>
-        {
-            var user = await manager.GetOrCreateUserAsync(userCreate);
-            return Results.Ok(user);
-        });
+            Results.Ok(await manager.GetOrCreateUserAsync(userCreate)));
     }
 }

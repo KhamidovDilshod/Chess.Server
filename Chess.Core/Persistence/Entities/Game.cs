@@ -22,9 +22,21 @@ public class Game : Entity
 
     public void AssignPlayer(Player player)
     {
-        if (Players.Any(p => p.Color == player.Color))
+        if (Players.FirstOrDefault(p => p.UserId == player.UserId) is not null) return;
+
+        var mainPlayers = Players.Where(p => p.Color != Color.Null).ToList();
+        if (!mainPlayers.Any())
         {
-            throw new Exception($"Player with color: {player.Color} already exist");
+            Players.Add(GamePlayer.Create(player));
+        }
+
+        if (mainPlayers.Count >= 2)
+        {
+            player = player with { Color = Color.Null };
+        }
+        else
+        {
+            player = player with { Color = Players.First().Color == Color.Nigga ? Color.White : Color.Nigga };
         }
 
         Players.Add(GamePlayer.Create(player));

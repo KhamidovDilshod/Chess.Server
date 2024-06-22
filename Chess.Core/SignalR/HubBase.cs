@@ -6,12 +6,12 @@ namespace Chess.Core.SignalR;
 
 public class HubBase : Hub
 {
-    private readonly ILogger<HubBase> _logger;
+    protected readonly ILogger<HubBase> Logger;
     private readonly ConnectionMapping<string> _connections = new();
 
     public HubBase(ILogger<HubBase> logger)
     {
-        _logger = logger;
+        Logger = logger;
     }
 
     protected string ConnectionId => Context.ConnectionId;
@@ -30,7 +30,7 @@ public class HubBase : Hub
     {
         string name = Context.User.Identity?.Name ?? string.Empty;
         _connections.Add(name, ConnectionId);
-        _logger.LogInformation("Client with Id:'{clientId}' connected", ConnectionId);
+        Logger.LogInformation("Client with Id:'{clientId}' connected", ConnectionId);
         await SendMessage(Name, $"Connected");
         await Clients.All.SendAsync("all",$"Client with id:'{ConnectionId}' connected");
         await base.OnConnectedAsync();
@@ -40,7 +40,7 @@ public class HubBase : Hub
     {
         string name = Context.User.Identity?.Name ?? string.Empty;
         _connections.Remove(name, ConnectionId);
-        _logger.LogInformation("Client wit Id: '{clientId}' disconnected'", ConnectionId);
+        Logger.LogInformation("Client wit Id: '{clientId}' disconnected'", ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
 }

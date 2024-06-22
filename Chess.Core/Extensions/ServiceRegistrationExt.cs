@@ -1,4 +1,5 @@
 using System.Reflection;
+using Chess.Core.Manage;
 using Chess.Core.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,8 @@ public static class ServiceRegistrationExt
         {
             services.AddScoped(manager);
         }
+
+        services.AddSingleton<SessionManager>();
 
         return services;
     }

@@ -4,7 +4,6 @@ using Chess.Endpoints;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseKestrel(p => p.ListenAnyIP(5000));
 builder.Services.AddSignalR();
 builder.Host.UseSerilog(ServiceRegistrationExt.Configure);
 
@@ -15,6 +14,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", b => b
         .WithOrigins("http://localhost:4200")
+        .WithOrigins("http://localhost:5200")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
@@ -28,4 +28,5 @@ app.UseAuthorization();
 app.AddGameEndpoints();
 app.AddAuthEndpoints();
 app.MapHub<HubBase>("/hub");
+app.MapHub<GameHub>("/game");
 app.Run();

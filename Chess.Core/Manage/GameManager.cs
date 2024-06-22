@@ -29,6 +29,23 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
         return await Add(game);
     }
 
+    public async ValueTask<GameModel?> GetAsync(Guid id)
+    {
+        var game = await Database.Games
+            .Where(g => g.Id == id)
+            .FirstOrDefaultAsync();
+
+        if (game is not null)
+        {
+            await Database.Entry(game)
+                .Collection(g => g.Players)
+                .LoadAsync();
+        }
+
+        return ToGameModel(game);
+    }
+
+
     public async ValueTask<GameModel?> AddPlayerAsync(Guid gameId, Player player)
     {
         var game = await Database.Games.FirstOrDefaultAsync(g => g.Id == gameId);
@@ -56,11 +73,11 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
         return ToGameModel(game);
     }
 
-    public async ValueTask<BoardModel?> GetBoardByGameId(Guid gameId)
+    public async ValueTask<string[][]> GetBoardByGameId(Guid gameId)
     {
         var board = await Database.Boards.Where(b => b.GameId == gameId)
             .FirstOrDefaultAsync();
-        return ToBoardModel(board);
+        return ToBoardModel(board)?.State ?? new string[][] { };
     }
 
     private GameModel? ToGameModel(Game? game)
