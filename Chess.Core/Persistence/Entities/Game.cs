@@ -22,15 +22,16 @@ public class Game : Entity
 
     public void AssignPlayer(Player player)
     {
-        if (Players.FirstOrDefault(p => p.UserId == player.UserId) is not null) return;
+        if (Players.Any(p => p.UserId == player.UserId)) return;
 
         var mainPlayers = Players.Where(p => p.Color != Color.Null).ToList();
         if (!mainPlayers.Any())
         {
             Players.Add(GamePlayer.Create(player));
+            return;
         }
 
-        if (mainPlayers.Count >= 2)
+        if (mainPlayers.Count >= 2) 
         {
             player = player with { Color = Color.Null };
         }

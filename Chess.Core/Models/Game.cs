@@ -2,17 +2,17 @@ using Chess.Core.Logic;
 
 namespace Chess.Core.Models;
 
-#region Game Models
+#region Game
 
 public record InitGame(List<Player>? Players = null);
 
-public record GameModel(Guid Id, DateTime Date, List<Player> Players);
+public record Game(Guid Id, DateTime Date, List<Player> Players);
 
 public record Player(Guid UserId, Guid? GameId, Color Color);
 
 #endregion
 
-#region Move Models
+#region Move
 
 public record MoveModel(Guid Id, Guid GameId, int Number, string Notation);
 

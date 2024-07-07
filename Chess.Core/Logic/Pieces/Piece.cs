@@ -11,4 +11,5 @@ public abstract class Piece
     }
 
     public Color Color { get; }
+    public bool HasMoved { get; set; }
 }

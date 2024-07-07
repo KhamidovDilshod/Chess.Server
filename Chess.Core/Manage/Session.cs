@@ -9,7 +9,7 @@ public sealed class Session(Guid gameId)
 
     public void RemovePlayer(Guid userId)
     {
-        if (_players.ContainsKey(userId))
+        if (IsPlayerInGame(userId))
         {
             _players.Remove(userId);
         }

@@ -5,7 +5,7 @@ namespace Chess.Core.Logic;
 public class ChessBoard
 {
     private readonly Piece?[][] _chessBoard;
-    private const Color PlayerColor = Color.White;
+    private Color _playerColor = Color.White;
     private const int BoardSize = 8;
     private Dictionary<string, Coords[]> _safeSquares;
     private CheckState _checkState = new(false);
@@ -20,10 +20,44 @@ public class ChessBoard
         }
     }
 
-    public ChessBoard()
+    public static Piece?[][] LoadFromChar(char[][] view)
     {
-        _chessBoard =
-            new[]
+        var result = new Piece?[][] { };
+
+        for (int i = 0; i < view.GetLength(0); i++)
+        {
+            for (int j = 0; j < view.GetLength(1); j++)
+            {
+                var fenChar = view[i][j];
+                result[i][j] = CharToPiece(fenChar);
+            }
+        }
+
+        return result;
+    }
+
+    private static Piece? CharToPiece(char fenChar)
+        => fenChar switch
+        {
+            FenChar.WhiteRook => new Rook(Color.White),
+            FenChar.WhiteKnight => new Knight(Color.White),
+            FenChar.WhiteBishop => new Bishop(Color.White),
+            FenChar.WhiteQueen => new Queen(Color.White),
+            FenChar.WhiteKing => new King(Color.White),
+            FenChar.WhitePawn => new Pawn(Color.White),
+            FenChar.NiggaRook => new Rook(Color.Nigga),
+            FenChar.NiggaKnight => new Knight(Color.Nigga),
+            FenChar.NiggaBishop => new Bishop(Color.Nigga),
+            FenChar.NiggaQueen => new Queen(Color.Nigga),
+            FenChar.NiggaKing => new King(Color.Nigga),
+            FenChar.NiggaPawn => new Pawn(Color.Nigga),
+            _ => null,
+        };
+
+    public ChessBoard(char[][]? state = null)
+    {
+        _chessBoard = state is null
+            ? new[]
             {
                 new Piece[]
                 {
@@ -74,7 +108,7 @@ public class ChessBoard
                     new King(Color.Nigga), new Bishop(Color.Nigga), new Knight(Color.Nigga), new Rook(Color.Nigga)
                 }
             }
-            ;
+            : LoadFromChar(state);
         _safeSquares = FindSafeSquares();
     }
 
@@ -88,7 +122,7 @@ public class ChessBoard
             {
                 var piece = _chessBoard[x][y];
 
-                if (piece is null || piece.Color != PlayerColor) continue;
+                if (piece is null || piece.Color != _playerColor) continue;
 
                 List<Coords> pieceSafeSquares = new();
                 ;
@@ -155,7 +189,7 @@ public class ChessBoard
             {
                 var piece = _chessBoard[x][y];
 
-                if (piece is null || piece.Color != PlayerColor) continue;
+                if (piece is null || piece.Color != _playerColor) continue;
 
                 foreach (var (dx, dy) in piece.Directions)
                 {
@@ -171,7 +205,7 @@ public class ChessBoard
 
                         if (attackedPiece is King && attackedPiece.Color == playerColor)
                         {
-                            if (checkingCurrentPosition) this._checkState = new CheckState(true, newX, newY);
+                            if (checkingCurrentPosition) _checkState = new CheckState(true, newX, newY);
                             return true;
                         }
                     }
@@ -182,7 +216,7 @@ public class ChessBoard
                             var attackedPiece = _chessBoard[newX][newY];
                             if (attackedPiece is King && attackedPiece.Color == playerColor)
                             {
-                                if (checkingCurrentPosition) this._checkState = new CheckState(true, newX, newY);
+                                if (checkingCurrentPosition) _checkState = new CheckState(true, newX, newY);
                                 return true;
                             }
 
@@ -216,6 +250,32 @@ public class ChessBoard
         _chessBoard[prevX][prevY] = piece;
         _chessBoard[newX][newY] = piece;
         return isPositionSafe;
+    }
+
+    public void Move(int prevX, int prevY, int newX, int newY)
+    {
+        if (!AreCoordsValid(prevX, prevY) || AreCoordsValid(newX, newY)) return;
+        Piece? piece = _chessBoard[prevX][prevY];
+        if (piece is null || piece.Color != _playerColor) return;
+
+        var pieceSafeSquares = _safeSquares[$"{prevX},{prevY}"];
+        if (!pieceSafeSquares.Any(coords => coords.X == newX && coords.Y == newY))
+        {
+            Console.WriteLine("Square is not safe");
+            return;
+        }
+
+        if ((piece is Pawn || piece is King || piece is Rook) && piece.HasMoved)
+        {
+            piece.HasMoved = true;
+        }
+
+        _chessBoard[prevX][prevY] = null;
+        _chessBoard[newX][newY] = piece;
+        _playerColor = _playerColor == Color.White ? Color.Nigga : Color.White;
+
+        IsInCheck(_playerColor, true);
+        _safeSquares = FindSafeSquares();
     }
 
     private static bool AreCoordsValid(int x, int y) => x >= 0 && y >= 0 && x < BoardSize && y > BoardSize;

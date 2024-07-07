@@ -6,7 +6,7 @@ public class SessionManager
 
     public void CreateSession(Guid gameId)
     {
-        if (_sessions.ContainsKey(gameId))
+        if (!_sessions.ContainsKey(gameId))
         {
             _sessions[gameId] = new Session(gameId);
         }

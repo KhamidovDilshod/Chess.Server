@@ -4,21 +4,23 @@ using Chess.Core.Logic;
 using Chess.Core.Models;
 using Chess.Core.Persistence;
 using Chess.Core.Persistence.Entities;
+using Chess.Core.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using Game = Chess.Core.Persistence.Entities.Game;
 
 namespace Chess.Core.Manage;
 
-public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>(db)
+public class GameManager(IMongoDatabase db) : BaseManager<Game, Models.Game, Guid>(db)
 {
-    protected override Expression<Func<Game, GameModel>> EntityToModel => e
-        => new GameModel(
+    protected override Expression<Func<Game, Models.Game>> EntityToModel => e
+        => new Models.Game(
             e.Id,
             e.Date,
             e.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList()
         );
 
-    public async ValueTask<GameModel> InitGameAsync(InitGame init)
+    public async ValueTask<Models.Game> InitGameAsync(InitGame init)
     {
         var game = Game.Init(init);
         var board = new ChessBoard().ChessBoardView;
@@ -29,7 +31,7 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
         return await Add(game);
     }
 
-    public async ValueTask<GameModel?> GetAsync(Guid id)
+    public async ValueTask<Models.Game?> GetAsync(Guid id)
     {
         var game = await Database.Games
             .Where(g => g.Id == id)
@@ -46,44 +48,82 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, GameModel, Guid>
     }
 
 
-    public async ValueTask<GameModel?> AddPlayerAsync(Guid gameId, Player player)
+    public async ValueTask<Models.Game?> AddPlayerAsync(Guid gameId, Player player, Game? game = null)
     {
-        var game = await Database.Games.FirstOrDefaultAsync(g => g.Id == gameId);
-        if (game is null) return null;
-        game.AssignPlayer(player);
+        game ??= await Get(gameId);
+        game!.AssignPlayer(player);
         await Database.SaveChangesAsync();
         return ToGameModel(game);
     }
 
-    public async Task<GameModel?> GetById(Guid id)
+    public new async Task<Game?> Get(Guid id)
     {
-        // Fetch the game entity by ID
         var game = await Database.Games
             .FirstOrDefaultAsync(g => g.Id == id);
 
-        // Explicitly load related entities if they are not automatically loaded
+        if (game == null) return game;
+        {
+            await Database.Entry(game)
+                .Collection(g => g.Players)
+                .LoadAsync();
+        }
+        return game;
+    }
+
+    public async Task<Models.Game?> GetById(Guid id)
+    {
+        var game = await Database.Games
+            .FirstOrDefaultAsync(g => g.Id == id);
+
         if (game == null) return ToGameModel(game);
         {
             await Database.Entry(game)
                 .Collection(g => g.Players)
                 .LoadAsync();
         }
-
-        // Convert the entity to the model
         return ToGameModel(game);
     }
 
     public async ValueTask<string[][]> GetBoardByGameId(Guid gameId)
     {
-        var board = await Database.Boards.Where(b => b.GameId == gameId)
-            .FirstOrDefaultAsync();
-        return ToBoardModel(board)?.State ?? new string[][] { };
+        try
+        {
+            var board = await Database.Boards.Where(b => b.GameId == gameId)
+                .FirstOrDefaultAsync();
+            
+            return ToBoardModel(board)?.State ?? new string[][] { };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
-    private GameModel? ToGameModel(Game? game)
+    public async ValueTask<string?[][]> MoveAsync(MoveRequest request)
+    {
+            var gameId = request.Player.GameId.GetValueOrDefault();
+            var game = await Get(gameId);
+            var gameBoard = await GetBoardByGameId(gameId);
+
+            if (game is null || gameBoard is null)
+            {
+                throw new Exception("Board not found");
+            }
+
+            var boardState = JsonSerializer.Deserialize<char[][]>(game.Board.StateJson);
+
+            if (boardState is null) throw new Exception("Can't deserialize board from db");
+
+            var board = new ChessBoard(boardState);
+            board.Move(request.PrevX, request.PrevY, request.NewX, request.NewY);
+            return board.ChessBoardView;
+    }
+
+    private Models.Game? ToGameModel(Game? game)
     {
         if (game is null) return null;
-        return new GameModel(
+        return new Models.Game(
             game.Id,
             game.Date,
             game.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList());
