@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Chess.Core.Persistence.Entities;
 
+[BsonCollection("user")]
 public class User : Entity
 {
     [MaxLength(60)] public required string Username { get; set; }

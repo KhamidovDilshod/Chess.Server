@@ -1,50 +1,34 @@
-using System.Linq.Expressions;
 using System.Text.Json;
 using Chess.Core.Logic;
 using Chess.Core.Models;
 using Chess.Core.Persistence;
 using Chess.Core.Persistence.Entities;
-using Chess.Core.SignalR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Game = Chess.Core.Persistence.Entities.Game;
 
 namespace Chess.Core.Manage;
 
-public class GameManager(IMongoDatabase db) : BaseManager<Game, Models.Game, Guid>(db)
+public class GameManager(IOptions<MongoOptions> options) : BaseManager(options.Value), IManager
 {
-    protected override Expression<Func<Game, Models.Game>> EntityToModel => e
-        => new Models.Game(
-            e.Id,
-            e.Date,
-            e.Players.Select(p => new Player(p.UserId, p.GameId, p.Color)).ToList()
-        );
-
-    public async ValueTask<Models.Game> InitGameAsync(InitGame init)
+    public async ValueTask<Models.Game?> InitGameAsync(InitGame init)
     {
         var game = Game.Init(init);
         var board = new ChessBoard().ChessBoardView;
-        game.Board = new Board
+        var gameBoard = new Board
         {
+            Id = Guid.NewGuid(),
+            GameId = game.Id,
             StateJson = JsonSerializer.Serialize(board)
         };
-        return await Add(game);
+        await Add(game);
+        await Add(gameBoard);
+        return ToGameModel(await Get<Game, Guid>(game.Id));
     }
 
-    public async ValueTask<Models.Game?> GetAsync(Guid id)
+    public async ValueTask<Models.Game?> GetAsync(Guid gameId)
     {
-        var game = await Database.Games
-            .Where(g => g.Id == id)
-            .FirstOrDefaultAsync();
-
-        if (game is not null)
-        {
-            await Database.Entry(game)
-                .Collection(g => g.Players)
-                .LoadAsync();
-        }
-
-        return ToGameModel(game);
+        return ToGameModel(await Get<Game, Guid>(gameId));
     }
 
 
@@ -52,72 +36,65 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, Models.Game, Gui
     {
         game ??= await Get(gameId);
         game!.AssignPlayer(player);
-        await Database.SaveChangesAsync();
-        return ToGameModel(game);
+
+        foreach (var gamePlayer in game.Players)
+        {
+            await Add(gamePlayer);
+        }
+
+        return await GetAsync(game.Id);
     }
 
-    public new async Task<Game?> Get(Guid id)
+    public async Task<Game?> Get(Guid id)
     {
-        var game = await Database.Games
-            .FirstOrDefaultAsync(g => g.Id == id);
+        var game = await Get<Game, Guid>(id);
 
-        if (game == null) return game;
-        {
-            await Database.Entry(game)
-                .Collection(g => g.Players)
-                .LoadAsync();
-        }
         return game;
     }
 
-    public async Task<Models.Game?> GetById(Guid id)
-    {
-        var game = await Database.Games
-            .FirstOrDefaultAsync(g => g.Id == id);
-
-        if (game == null) return ToGameModel(game);
-        {
-            await Database.Entry(game)
-                .Collection(g => g.Players)
-                .LoadAsync();
-        }
-        return ToGameModel(game);
-    }
-
-    public async ValueTask<string[][]> GetBoardByGameId(Guid gameId)
+    public async ValueTask<char[][]> GetBoardByGameId(Guid gameId)
     {
         try
         {
-            var board = await Database.Boards.Where(b => b.GameId == gameId)
-                .FirstOrDefaultAsync();
-            
-            return ToBoardModel(board)?.State ?? new string[][] { };
+            var board = await Set<Board>().Find(board => board.GameId == gameId).FirstOrDefaultAsync();
+            return ToBoardModel(board)?.State ?? new char[][] { };
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            return new char[][] { };
         }
     }
 
-    public async ValueTask<string?[][]> MoveAsync(MoveRequest request)
+    public async ValueTask<char[][]> MoveAsync(MoveRequest request)
     {
-            var gameId = request.Player.GameId.GetValueOrDefault();
-            var game = await Get(gameId);
-            var gameBoard = await GetBoardByGameId(gameId);
+        var gameId = request.Player.GameId.GetValueOrDefault();
+        var gameBoard = await GetBoardByGameId(gameId);
+        var game = await Get(gameId);
 
-            if (game is null || gameBoard is null)
-            {
-                throw new Exception("Board not found");
-            }
+        if (game is null || gameBoard is null)
+        {
+            throw new Exception("Board not found");
+        }
 
-            var boardState = JsonSerializer.Deserialize<char[][]>(game.Board.StateJson);
+        string notation = $"prevX:{request.PrevX}-prevY:{request.PrevY},newX:{request.NewX}-newY{request.NewY}";
 
-            if (boardState is null) throw new Exception("Can't deserialize board from db");
 
-            var board = new ChessBoard(boardState);
-            board.Move(request.PrevX, request.PrevY, request.NewX, request.NewY);
-            return board.ChessBoardView;
+        if (gameBoard is null) throw new Exception("Can't deserialize board from db");
+
+        var board = new ChessBoard(gameBoard);
+        
+        board.Move(request.PrevX, request.PrevY, request.NewX, request.NewY);
+        
+        game.AddMove(
+            new AddMove(
+                request.Player.GameId.GetValueOrDefault(),
+                request.Player.UserId,
+                game.LastMove()?.Number ?? 0 + 1,
+                notation
+            ));
+
+        return board.ChessBoardView;
     }
 
     private Models.Game? ToGameModel(Game? game)
@@ -133,7 +110,7 @@ public class GameManager(IMongoDatabase db) : BaseManager<Game, Models.Game, Gui
     {
         return string.IsNullOrEmpty(board?.StateJson)
             ? null
-            : new BoardModel(JsonSerializer.Deserialize<string[][]>(board.StateJson, JsonSerializerOptions) ??
-                             Array.Empty<string[]>());
+            : new BoardModel(JsonSerializer.Deserialize<char[][]>(board.StateJson, JsonSerializerOptions) ??
+                             Array.Empty<char[]>());
     }
 }

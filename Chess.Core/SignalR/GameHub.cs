@@ -92,7 +92,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
 
     private async ValueTask<Game> CreateGameSessionAsync(Player player)
     {
-        var game = await gameManager.InitGameAsync(new InitGame { Players = new List<Player> { player } });
+        var game = await gameManager.InitGameAsync(new InitGame(new List<Player> { player }));
         sessionManager.CreateSession(game.Id);
         Logger.LogInformation("Game initialized: '{@game}'", game.Id);
         foreach (var pl in game.Players)
@@ -105,4 +105,3 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
         return game;
     }
 }
-public record MoveRequest(Player Player, int PrevX, int PrevY, int NewX, int NewY);

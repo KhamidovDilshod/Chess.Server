@@ -23,12 +23,8 @@ public static class ServiceRegistrationExt
             return new MongoClient(connectionString);
         });
 
-        services.AddScoped(sp =>
-        {
-            var databaseName = configuration.GetConnectionString("Database");
-            var mongoClient = sp.GetRequiredService<IMongoClient>();
-            return mongoClient.GetDatabase(databaseName);
-        });
+        services.Configure<MongoOptions>(configuration.GetSection("MongoDbSettings") ??
+                                         throw new NullReferenceException("MongoDbSettings is null"));
         return services;
     }
 
@@ -36,7 +32,7 @@ public static class ServiceRegistrationExt
     {
         var assembly = typeof(ServiceRegistrationExt).Assembly;
 
-        var managers = assembly.DefinedTypes.Where(t => t.IsSubclassOfGeneric(typeof(BaseManager<,,>)) && !t.IsAbstract);
+        var managers = assembly.DefinedTypes.Where(t => typeof(IManager).IsAssignableFrom(t) && !t.IsAbstract);
         foreach (var manager in managers)
         {
             services.AddScoped(manager);
@@ -73,10 +69,10 @@ public static class ServiceRegistrationExt
 
         return false;
     }
-     public static Action<HostBuilderContext, LoggerConfiguration> Configure =>
+
+    public static Action<HostBuilderContext, LoggerConfiguration> ConfigureLogging =>
         (context, configuration) =>
         {
-
             configuration
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", context.HostingEnvironment.ApplicationName)
@@ -89,26 +85,28 @@ public static class ServiceRegistrationExt
                     {
                         return true;
                     }
+
                     return false;
                 })
                 .WriteTo.Console()
                 .WriteTo.Debug();
-            
 
-            configuration.ReadFrom.Configuration(context.Configuration, readerOptions: new ConfigurationReaderOptions(typeof(ConsoleLoggerConfigurationExtensions).Assembly));
+
+            configuration.ReadFrom.Configuration(context.Configuration,
+                readerOptions: new ConfigurationReaderOptions(typeof(ConsoleLoggerConfigurationExtensions).Assembly));
         };
 
-     public static void AddGoogleAuth(this IServiceCollection services, IConfiguration configuration)
-         => services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-             .AddJwtBearer(options =>
-             {
-                 options.TokenValidationParameters = new TokenValidationParameters
-                 {
-                     ValidateIssuer = true,
-                     ValidIssuer = configuration["ValidIssuer"],
-                     ValidateAudience = true,
-                     ValidAudience = configuration["ValidAudience"],
-                     ClockSkew=TimeSpan.Zero
-                 };
-             });
+    public static void AddGoogleAuth(this IServiceCollection services, IConfiguration configuration)
+        => services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["ValidIssuer"],
+                    ValidateAudience = true,
+                    ValidAudience = configuration["ValidAudience"],
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
 }

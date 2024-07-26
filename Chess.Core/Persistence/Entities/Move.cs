@@ -3,6 +3,7 @@ using Chess.Core.Models;
 
 namespace Chess.Core.Persistence.Entities;
 
+[BsonCollection("move")]
 public class Move : Entity
 {
     public Guid GameId { get; set; }

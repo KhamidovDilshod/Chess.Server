@@ -1,5 +1,6 @@
 namespace Chess.Core.Persistence.Entities;
 
+[BsonCollection("gameState")]
 public class GameState : Entity
 {
     public Guid GameId { get; set; }

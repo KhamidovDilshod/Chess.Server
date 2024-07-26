@@ -3,6 +3,7 @@ using Chess.Core.Models;
 
 namespace Chess.Core.Persistence.Entities;
 
+[BsonCollection("gamePlayer")]
 public class GamePlayer : Entity
 {
     public Guid UserId { get; set; }
@@ -18,4 +19,6 @@ public class GamePlayer : Entity
             UserId = player.UserId,
             Color = player.Color
         };
+
+    public Player ToModel() => new(UserId, GameId, Color);
 }

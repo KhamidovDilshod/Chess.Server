@@ -1,37 +1,40 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 using Chess.Core.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using MongoDB.Driver;
 
 namespace Chess.Core.Persistence;
 
-public abstract class BaseManager<T, TModel, TKey>(IMongoDatabase db) where T : Entity<TKey> where TKey : notnull
+public abstract class BaseManager(MongoOptions settings)
 {
-    protected readonly Db Database = Db.Create(db);
+    private readonly IMongoDatabase _database =
+        new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);
 
     protected readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    protected abstract Expression<Func<T, TModel>> EntityToModel { get; }
+    protected IMongoCollection<TSet> Set<TSet>() =>
+        _database.GetCollection<TSet>(GetCollectionName(typeof(TSet)));
 
-    public Task<IEnumerable<TModel>> GetAll() => Task.Run(() => Database.Set<T>()
-        .Select(EntityToModel)
-        .AsEnumerable());
-
-    public Task<TModel?> Get(TKey id) => Database
-        .Set<T>()
-        .Where(e => e.Id.Equals(id))
-        .Select(EntityToModel)
-        .FirstOrDefaultAsync();
-
-
-    public async ValueTask<TModel> Add(T entity)
+    private string? GetCollectionName(ICustomAttributeProvider type)
     {
-        var entry = Database.Set<T>().Add(entity);
-        await Database.SaveChangesAsync();
-        return EntityToModel.Compile().Invoke(entry.Entity);
+        var attributes = type
+            .GetCustomAttributes(typeof(BsonCollectionAttribute), true);
+
+        var collectionName = ((BsonCollectionAttribute)attributes.First()).CollectionName;
+        return collectionName;
     }
+
+    public Task<IEnumerable<TSet>> GetAll<TSet>() => Task.Run(() => Set<TSet>().AsQueryable().AsEnumerable());
+
+    public Task<TSet> Get<TSet, TKey>(TKey id) where TSet : Entity =>
+        Task.Run(() => Set<TSet>().Find(e => e.Id.Equals(id)).FirstOrDefaultAsync());
+
+
+    protected Task Add<TSet>(TSet entity) => Task.Run(() => Set<TSet>().InsertOneAsync(entity));
 }

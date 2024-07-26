@@ -10,26 +10,28 @@ public class ChessBoard
     private Dictionary<string, Coords[]> _safeSquares;
     private CheckState _checkState = new(false);
 
-    public string[][] ChessBoardView
+    public char[][] ChessBoardView
     {
         get
         {
             return _chessBoard
-                .Select(row => row.Select(piece => piece is Piece ? piece.FenChar.ToString() : null).ToArray())
+                .Select(row => row.Select(piece => piece is Piece ? piece.FenChar : default).ToArray())
                 .ToArray();
         }
     }
 
     public static Piece?[][] LoadFromChar(char[][] view)
     {
-        var result = new Piece?[][] { };
+        var result = new Piece?[view.Length][];
 
-        for (int i = 0; i < view.GetLength(0); i++)
+        for (int i = 0; i < view.Length; i++)
         {
-            for (int j = 0; j < view.GetLength(1); j++)
+            result[i] = new Piece?[view[i].Length]; // Initialize the sub-array/
+            for (int j = 0; j < view[i].Length; j++)
             {
                 var fenChar = view[i][j];
-                result[i][j] = CharToPiece(fenChar);
+                var piece = CharToPiece(fenChar);
+                result[i][j] = piece;
             }
         }
 
@@ -125,7 +127,6 @@ public class ChessBoard
                 if (piece is null || piece.Color != _playerColor) continue;
 
                 List<Coords> pieceSafeSquares = new();
-                ;
 
                 foreach (var (dx, dy) in piece.Directions)
                 {
@@ -146,7 +147,7 @@ public class ChessBoard
 
                         if ((dx == 1 || dx == -1) && dy == 0 && newPiece is not null) continue;
 
-                        if ((dy == 1 || dy == -1) && (newPiece is not null || piece.Color == newPiece?.Color)) continue;
+                        if ((dy == 1 || dy == -1) && (newPiece is null || newPiece.Color == piece.Color)) continue;
                     }
 
                     if (piece is Pawn || piece is Knight || piece is King)
@@ -155,26 +156,26 @@ public class ChessBoard
                         {
                             pieceSafeSquares.Add(new Coords(newX, newY));
                         }
-                        else
+                    }
+                    else
+                    {
+                        while (AreCoordsValid(newX, newY))
                         {
-                            while (AreCoordsValid(newX, newY))
+                            newPiece = _chessBoard[newX][newY];
+                            if (newPiece is not null && newPiece.Color == piece.Color) break;
+                            if (IsPositionSafeAfterMove(piece, x, y, newX, newY))
                             {
-                                newPiece = _chessBoard[newX][newY];
-                                if (newPiece is not null && newPiece.Color == piece.Color) break;
-                                if (IsPositionSafeAfterMove(piece, x, y, newX, newY))
-                                {
-                                    pieceSafeSquares.Add(new Coords(newX, newY));
-                                }
-
-                                if (newPiece != null) break;
-                                newX += dx;
-                                newY += dy;
+                                pieceSafeSquares.Add(new Coords(newX, newY));
                             }
+
+                            if (newPiece != null) break;
+                            newX += dx;
+                            newY += dy;
                         }
                     }
-
-                    if (pieceSafeSquares.Any()) safeSquares.Add($"{x},{y}", pieceSafeSquares.ToArray());
                 }
+
+                if (pieceSafeSquares.Any()) safeSquares.Add($"{x},{y}", pieceSafeSquares.ToArray());
             }
         }
 
@@ -189,7 +190,7 @@ public class ChessBoard
             {
                 var piece = _chessBoard[x][y];
 
-                if (piece is null || piece.Color != _playerColor) continue;
+                if (piece is null || piece.Color != playerColor) continue;
 
                 foreach (var (dx, dy) in piece.Directions)
                 {
@@ -197,6 +198,7 @@ public class ChessBoard
                     var newY = y + dy;
 
                     if (!AreCoordsValid(newX, newY)) continue;
+
                     if (piece is Pawn || piece is Knight || piece is King)
                     {
                         if (piece is Pawn && dy == 0) continue;
@@ -220,7 +222,7 @@ public class ChessBoard
                                 return true;
                             }
 
-                            if (attackedPiece is null) break;
+                            if (attackedPiece != null) break;
 
                             newX += dx;
                             newY += dy;
@@ -241,20 +243,20 @@ public class ChessBoard
 
         if (newPiece is not null && newPiece.Color == piece.Color) return false;
 
-        //Simulate position;
+        // Simulate position;
         _chessBoard[prevX][prevY] = null;
         _chessBoard[newX][newY] = piece;
         bool isPositionSafe = !IsInCheck(piece.Color, false);
 
-        //restore position back;
+        // Restore position back;
         _chessBoard[prevX][prevY] = piece;
-        _chessBoard[newX][newY] = piece;
+        _chessBoard[newX][newY] = newPiece; // Restore the original piece
         return isPositionSafe;
     }
 
     public void Move(int prevX, int prevY, int newX, int newY)
     {
-        if (!AreCoordsValid(prevX, prevY) || AreCoordsValid(newX, newY)) return;
+        // if (!AreCoordsValid(prevX, prevY) || AreCoordsValid(newX, newY)) return;
         Piece? piece = _chessBoard[prevX][prevY];
         if (piece is null || piece.Color != _playerColor) return;
 
@@ -278,5 +280,5 @@ public class ChessBoard
         _safeSquares = FindSafeSquares();
     }
 
-    private static bool AreCoordsValid(int x, int y) => x >= 0 && y >= 0 && x < BoardSize && y > BoardSize;
+    private static bool AreCoordsValid(int x, int y) => x >= 0 && y >= 0 && x < BoardSize && y < BoardSize;
 }

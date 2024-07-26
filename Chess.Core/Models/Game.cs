@@ -17,12 +17,13 @@ public record Player(Guid UserId, Guid? GameId, Color Color);
 public record MoveModel(Guid Id, Guid GameId, int Number, string Notation);
 
 public record AddMove(Guid GameId, Guid UserId, int Number, string Notation);
+public record MoveRequest(Player Player, int PrevX, int PrevY, int NewX, int NewY);
 
 #endregion
 
 #region Board
 
-public record BoardModel(string[][] State);
+public record BoardModel(char[][] State);
 
 #endregion
 

@@ -3,18 +3,26 @@ using Chess.Core.Models;
 
 namespace Chess.Core.Persistence.Entities;
 
+[BsonCollection("game")]
 public class Game : Entity
 {
-    public List<GamePlayer> Players { get; init; } = new();
+    public List<GamePlayer> Players { get; set; } = new();
     public List<Move> Moves { get; init; } = new();
     public Board? Board { get; set; }
 
     public static Game Init(InitGame init)
     {
+        Guid gameId=Guid.NewGuid();
         var game = new Game();
+        game.Id = gameId;
         if (init.Players is not null)
         {
             game.Players.AddRange(init.Players.Select(GamePlayer.Create));
+        }
+
+        foreach (var player in game.Players)
+        {
+            player.GameId = gameId;
         }
 
         return game;
@@ -55,4 +63,6 @@ public class Game : Entity
         Moves.Add(entity);
         return entity;
     }
+
+    public Move? LastMove() => Moves.MaxBy(move => move.Date);
 }

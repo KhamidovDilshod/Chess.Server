@@ -1,23 +1,22 @@
-using System.Linq.Expressions;
 using Chess.Core.Models;
 using Chess.Core.Persistence;
 using Chess.Core.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace Chess.Core.Manage;
 
-public class UserManager(IMongoDatabase db) : BaseManager<User, UserModel, Guid>(db)
+public class UserManager(IOptions<MongoOptions> options) : BaseManager(options.Value), IManager
 {
-    protected override Expression<Func<User, UserModel>> EntityToModel => e =>
-        new UserModel(e.Id, e.Username, e.Email, e.Date);
-
     public async ValueTask<UserModel> GetOrCreateUserAsync(UserCreate userCreate)
     {
-        var existingUser = await Database.Users.FirstOrDefaultAsync(u => u.Email == userCreate.Email);
-        if (existingUser is not null) return EntityToModel.Compile().Invoke(existingUser);
+        var existingUser = await Set<User>().Find(u => u.Email == userCreate.Email).FirstOrDefaultAsync();
+        if (existingUser is not null) return ToModel(existingUser);
 
         var user = User.Create(userCreate.Email, userCreate.Username, userCreate.LogoUrl);
-        return await Add(user);
+        await Add(user);
+        return ToModel(await Get<User, Guid>(user.Id));
     }
+
+    private static UserModel ToModel(User user) => new(user.Id, user.Username, user.Email, user.Date);
 }

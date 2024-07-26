@@ -3,7 +3,7 @@ namespace Chess.Core.Manage;
 public sealed class Session(Guid gameId)
 {
     public Guid GameId { get; set; } = gameId;
-    private readonly Dictionary<Guid, string> _players = new(); //Key: UserId, value: ConnectionId
+    private readonly Dictionary<Guid, string> _players = new();
 
     public void AddPlayer(Guid userId, string connectionId) => _players.TryAdd(userId, connectionId);
 
