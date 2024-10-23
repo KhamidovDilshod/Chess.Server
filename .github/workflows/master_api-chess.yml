@@ -31,7 +31,7 @@ jobs:
       with:
         push: true
         tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_763a2a62f74d40be8053079e9cdb9d35 }}/chess:${{ github.sha }}
-        file: ./Dockerfile
+        file: ./Chess/Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
