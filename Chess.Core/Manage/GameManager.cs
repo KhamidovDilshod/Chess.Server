@@ -90,7 +90,7 @@ public class GameManager(IOptions<MongoOptions> options) : BaseManager(options.V
             new AddMove(
                 request.Player.GameId.GetValueOrDefault(),
                 request.Player.UserId,
-                game.LastMove()?.Number ?? 0 + 1,
+                game.LastMove()?.Number ?? 1,
                 notation
             ));
 

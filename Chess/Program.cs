@@ -1,21 +1,24 @@
 using Chess.Core.Extensions;
-using Chess.Core.Manage;
 using Chess.Core.SignalR;
 using Chess.Endpoints;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddSignalR();
 builder.Host.UseSerilog(ServiceRegistrationExt.ConfigureLogging);
-
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddManagers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", b => b
-        .WithOrigins("http://localhost:4200")
-        .WithOrigins("http://localhost:5200")
+        .WithOrigins(
+            "http://localhost:4200",
+            "http://localhost:5200",
+            "https://white-dune-0f6592410.5.azurestaticapps.net"
+        )
+        .WithOrigins()
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
