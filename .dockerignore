@@ -10,7 +10,7 @@
 **/.idea
 **/*.*proj.user
 **/*.dbmdl
-**/*.jfm
+**/*.jfm 
 **/azds.yaml
 **/bin
 **/charts
