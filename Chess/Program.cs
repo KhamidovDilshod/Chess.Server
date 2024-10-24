@@ -7,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
 builder.Host.UseSerilog(ServiceRegistrationExt.ConfigureLogging);
+string connectionString = builder.Configuration.GetConnectionString("AppConfig")!;
+
+// Load configuration from Azure App Configuration
+builder.Configuration.AddAzureAppConfiguration(connectionString);
+
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddManagers();
