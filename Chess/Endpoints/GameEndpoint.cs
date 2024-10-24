@@ -7,6 +7,7 @@ public static class GameEndpoint
 {
     public static void AddGameEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("", () => Results.Ok("Working"));
         app.MapGet("game/{gameId}", async (GameManager manager, Guid gameId) =>
         {
             var result = await manager.GetAsync(gameId);
