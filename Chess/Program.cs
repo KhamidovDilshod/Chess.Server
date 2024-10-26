@@ -31,7 +31,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.AddGameEndpoints();
 app.AddAuthEndpoints();
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+// app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.MapHub<HubBase>("/hub");
 app.MapHub<GameHub>("/game");
 app.Run();
