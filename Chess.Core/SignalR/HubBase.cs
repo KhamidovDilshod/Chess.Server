@@ -4,15 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Chess.Core.SignalR;
 
-public class HubBase : Hub
+public class HubBase(ILogger<HubBase> logger) : Hub
 {
-    protected readonly ILogger<HubBase> Logger;
+    protected readonly ILogger<HubBase> Logger = logger;
     private readonly ConnectionMapping<string> _connections = new();
-
-    public HubBase(ILogger<HubBase> logger)
-    {
-        Logger = logger;
-    }
 
     protected string ConnectionId => Context.ConnectionId;
     protected string Name => Context.User.Identity?.Name ?? string.Empty;

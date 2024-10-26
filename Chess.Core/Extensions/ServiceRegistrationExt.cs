@@ -28,7 +28,7 @@ public static class ServiceRegistrationExt
         return services;
     }
 
-    public static IServiceCollection AddManagers(this IServiceCollection services)
+    public static void AddManagers(this IServiceCollection services)
     {
         var assembly = typeof(ServiceRegistrationExt).Assembly;
 
@@ -39,8 +39,6 @@ public static class ServiceRegistrationExt
         }
 
         services.AddSingleton<SessionManager>();
-
-        return services;
     }
 
     private static bool IsSubclassOfGeneric(this Type type, Type genericBaseType)
