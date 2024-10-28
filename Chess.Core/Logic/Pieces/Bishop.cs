@@ -10,8 +10,7 @@ public class Bishop : Piece
 
     public sealed override char FenChar { get; set; }
 
-    public override Coords[] Directions { get; set; } = new[]
-    {
+    public override Coords[] Directions { get; set; } = {
         new Coords(1, 1),
         new Coords(1, -1),
         new Coords(-1, 1),

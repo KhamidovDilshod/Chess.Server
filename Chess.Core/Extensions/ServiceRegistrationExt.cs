@@ -8,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
-using Serilog.Events;
 using Serilog.Settings.Configuration;
 
 namespace Chess.Core.Extensions;

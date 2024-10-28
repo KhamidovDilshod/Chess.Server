@@ -1,4 +1,5 @@
 using Chess.Core.Constants;
+using Chess.Core.Extensions;
 using Chess.Core.Manage;
 using Chess.Core.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -6,10 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Chess.Core.SignalR;
 
-public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, GameManager gameManager)
-    : HubBase(logger)
+public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, GameManager gameManager) : HubBase(logger)
 {
-    [Obsolete]
+    [Obsolete("Recommended to use endpoint: 'game/init'")]
     [HubMethodName(HubMethods.CreateGame)]
     public async ValueTask CreateGameAsync(InitGame init)
     {
@@ -33,13 +33,14 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
     {
         var game = await gameManager.GetAsync(player.GameId.GetValueOrDefault()) ??
                    await CreateGameSessionAsync(player);
-
+        game = await gameManager.AddPlayerAsync(game.Id, player);
+        
+        NullException.ThrowIfNull(game);
         var session = sessionManager.GetSession(game.Id);
 
         if (session == null)
         {
             sessionManager.CreateSession(game.Id);
-            await Groups.AddToGroupAsync(ConnectionId, game.Id.ToString());
             foreach (var pl in game.Players)
             {
                 Logger.LogInformation("Player:{@player} added to Game: {@game}", pl, game);
@@ -47,15 +48,17 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
             }
         }
 
+        await Groups.AddToGroupAsync(ConnectionId, game.Id.ToString());
+
         sessionManager.AddPlayerToGame(game.Id, player.UserId, Context.ConnectionId);
-        game = await gameManager.AddPlayerAsync(game.Id, player);
-        await Clients.Group(game!.Id.ToString())
-            .SendAsync(HubMethods.JoinGame, game);
+        
+        await Clients.Group(game.Id.ToString()).SendAsync(HubMethods.Joined, game);
     }
 
     [HubMethodName(HubMethods.LeaveGame)]
-    public void LeaveGameAsync(Player player)
+    public async Task LeaveGameAsync(Player player)
     {
+        NullException.ThrowIfNull(player.GameId);
         var session = sessionManager.GetSession(player.GameId.GetValueOrDefault());
         if (session is null)
         {
@@ -63,10 +66,12 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
             return;
         }
 
+
         sessionManager.RemovePlayerFromGame(session.GameId, player.UserId);
         if (session.ConnectionId(player.UserId) is not null && player.GameId.ToString() is not null)
         {
-            Groups.RemoveFromGroupAsync(session.ConnectionId(player.UserId)!, player.GameId.ToString()!);
+            await Groups.RemoveFromGroupAsync(session.ConnectionId(player.UserId)!, player.GameId.ToString()!);
+            await Clients.Group($"{player.GameId}").SendAsync(HubMethods.Left, player.UserId);
         }
 
         logger.LogInformation("Player: {player} left Game: {game}", player.UserId, player.UserId);
@@ -86,13 +91,14 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
         if (session.IsPlayerInGame(request.Player.UserId))
         {
             var game = await gameManager.MoveAsync(request);
-            Clients.Group($"{request.Player.GameId}")?.SendAsync(HubMethods.Move, game);
+            await Clients.Group($"{request.Player.GameId}").SendAsync(HubMethods.Moved, game);
         }
     }
 
-    private async ValueTask<Game> CreateGameSessionAsync(Player player)
+    private async ValueTask<GameModel> CreateGameSessionAsync(Player player)
     {
         var game = await gameManager.InitGameAsync(new InitGame(new List<Player> { player }));
+        NullException.ThrowIfNull(game);
         sessionManager.CreateSession(game.Id);
         Logger.LogInformation("Game initialized: '{@game}'", game.Id);
         foreach (var pl in game.Players)

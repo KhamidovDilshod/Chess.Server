@@ -1,7 +1,6 @@
 using Chess.Core.Manage;
 using Chess.Core.Models;
 using Chess.Core.Persistence.Entities;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Chess.Endpoints;
 

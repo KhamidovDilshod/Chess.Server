@@ -25,10 +25,17 @@ public static class GameEndpoint
             var result = await manager.AddPlayerAsync(gameId, player);
             return result is null ? Results.NotFound() : Results.Ok(result);
         });
+        
         app.MapGet("game/{gameId}/board", async (GameManager manager, Guid gameId) =>
         {
             var result = await manager.GetBoardByGameId(gameId);
-            return result is null ? Results.NotFound() : Results.Ok(result);
+            return !result.state.Any() ? Results.NotFound() : Results.Ok(result.state);
+        });
+        
+        app.MapGet("game/{gameId}/moves", async (GameManager manager, Guid gameId) =>
+        {
+            var result = await manager.GetMovesByGameId(gameId);
+            return Results.Ok(result);
         });
     }
 }

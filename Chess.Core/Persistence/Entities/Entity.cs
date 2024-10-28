@@ -7,7 +7,7 @@ public class Entity<T> where T : notnull
 {
     [BsonId]
     [BsonRepresentation(BsonType.String)]
-    public T Id { get; set; }
+    public required T Id { get; set; }
 
     public DateTime Date { get; set; } = DateTime.Now;
 }

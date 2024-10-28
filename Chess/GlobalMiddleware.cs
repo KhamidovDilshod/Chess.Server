@@ -27,7 +27,7 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next)
         var response = new
         {
             StatusCode = statusCode,
-            Message = exception.Message,
+            exception.Message,
             Details = exception.StackTrace
         };
 

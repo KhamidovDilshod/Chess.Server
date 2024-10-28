@@ -21,7 +21,7 @@ public class FenChar
 public enum Color
 {
     White,
-    Nigga,
+    Black,
 
     //For spectators
     Null

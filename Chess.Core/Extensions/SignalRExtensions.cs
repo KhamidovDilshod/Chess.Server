@@ -1,6 +1,4 @@
-﻿using Chess.Core.Abstractions;
-
-namespace Chess.Core.Extensions;
+﻿namespace Chess.Core.Extensions;
 
 public static class SignalRExtensions
 {

@@ -2,8 +2,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using Chess.Core.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using MongoDB.Driver;
 
 namespace Chess.Core.Persistence;
@@ -21,7 +19,7 @@ public abstract class BaseManager(MongoOptions settings)
     protected IMongoCollection<TSet> Set<TSet>() =>
         _database.GetCollection<TSet>(GetCollectionName(typeof(TSet)));
 
-    private string? GetCollectionName(ICustomAttributeProvider type)
+    private static string? GetCollectionName(ICustomAttributeProvider type)
     {
         var attributes = type
             .GetCustomAttributes(typeof(BsonCollectionAttribute), true);
@@ -35,6 +33,23 @@ public abstract class BaseManager(MongoOptions settings)
     public Task<TSet> Get<TSet, TKey>(TKey id) where TSet : Entity =>
         Task.Run(() => Set<TSet>().Find(e => e.Id.Equals(id)).FirstOrDefaultAsync());
 
+    protected Task<List<TSet>> GetAll<TSet>(Expression<Func<TSet, bool>> func) where TSet : Entity =>
+        Task.Run(() => Set<TSet>().Find(func).ToList());
 
-    protected Task Add<TSet>(TSet entity) => Task.Run(() => Set<TSet>().InsertOneAsync(entity));
+
+    protected async Task Add<TSet>(TSet entity)
+    {
+        var collection = Set<TSet>();
+        if (collection == null)
+            throw new InvalidOperationException($"Collection for {typeof(TSet).Name} not found.");
+        await collection.InsertOneAsync(entity);
+    }
+
+    protected async Task Update<TSet>(TSet entity) where TSet : Entity
+    {
+        var collection = Set<TSet>();
+        if (collection == null)
+            throw new InvalidOperationException($"Collection for {typeof(TSet).Name} not found.");
+        await collection.ReplaceOneAsync(g => g.Id == entity.Id, entity);
+    }
 }

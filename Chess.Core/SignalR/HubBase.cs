@@ -1,5 +1,4 @@
-﻿using Chess.Core.Manage;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace Chess.Core.SignalR;
@@ -10,14 +9,13 @@ public class HubBase(ILogger<HubBase> logger) : Hub
     private readonly ConnectionMapping<string> _connections = new();
 
     protected string ConnectionId => Context.ConnectionId;
-    protected string Name => Context.User.Identity?.Name ?? string.Empty;
+    private string Name => Context.User?.Identity?.Name ?? string.Empty;
 
     public async ValueTask SendMessage(string who, string message)
     {
-        string name = Name;
         foreach (var connection in _connections.GetConnections(who))
         {
-            await Clients.Client(connection).SendAsync("notification",name + ": " + message);
+            await Clients.Client(connection).SendAsync("notification", $"{ConnectionId} : {message}");
         }
     }
 
@@ -26,8 +24,8 @@ public class HubBase(ILogger<HubBase> logger) : Hub
         string name = Context.User.Identity?.Name ?? string.Empty;
         _connections.Add(name, ConnectionId);
         Logger.LogInformation("Client with Id:'{clientId}' connected", ConnectionId);
-        await SendMessage(Name, $"Connected");
-        await Clients.All.SendAsync("all",$"Client with id:'{ConnectionId}' connected");
+        await SendMessage(name, "Connected");
+        await Clients.All.SendAsync("all", $"Client with id:'{ConnectionId}' connected");
         await base.OnConnectedAsync();
     }
 

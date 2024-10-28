@@ -1,15 +1,10 @@
 namespace Chess.Core.Logic.Pieces;
 
-public abstract class Piece
+public abstract class Piece(Color color)
 {
     public abstract char FenChar { get; set; }
     public abstract Coords[] Directions { get; set; }
 
-    public Piece(Color color)
-    {
-        Color = color;
-    }
-
-    public Color Color { get; }
+    public Color Color { get; } = color;
     public bool HasMoved { get; set; }
 }

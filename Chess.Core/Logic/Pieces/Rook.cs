@@ -12,7 +12,7 @@ public class Rook : Piece
     public sealed override char FenChar { get; set; }
 
     public override Coords[] Directions { get; set; } =
-    new []{
+    {
         new Coords(1, 0),
         new Coords(-1, 0),
         new Coords(0, 1),
