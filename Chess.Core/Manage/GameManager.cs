@@ -84,6 +84,8 @@ public class GameManager(IOptions<MongoOptions> options) : BaseManager(options.V
         game.Players = await GetAll<GamePlayer>(g => g.GameId == game.Id);
 
         string notation = $"prevX:{request.PrevX}-prevY:{request.PrevY},newX:{request.NewX}-newY{request.NewY}";
+        //TODO save Initialized board in cache instead of initializing it from state
+        //Create singleton BoardCacheManager Class Map<gameId,ChessBoard> like map
         var board = new ChessBoard(gameBoard.state, request.Player.Color);
 
         board.Move(request.PrevX, request.PrevY, request.NewX, request.NewY);
@@ -95,6 +97,7 @@ public class GameManager(IOptions<MongoOptions> options) : BaseManager(options.V
                 notation
             ));
         await Add(move);
+        //TODO replace every time board updating on move to save on cache and persist to db in every (x) time(Maybe bad option!)
         await EnsureBoardUpdated(gameId, gameBoard.id, board);
         return board.ChessBoardView;
     }
