@@ -6,7 +6,7 @@ using MongoDB.Driver;
 
 namespace Chess.Core.Persistence;
 
-public abstract class BaseManager(MongoOptions settings)
+public abstract class MongoDb(MongoOptions settings)
 {
     private readonly IMongoDatabase _database =
         new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);

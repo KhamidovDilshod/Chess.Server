@@ -6,7 +6,7 @@ using MongoDB.Driver;
 
 namespace Chess.Core.Manage;
 
-public class UserManager(IOptions<MongoOptions> options) : BaseManager(options.Value), IManager
+public class UserManager(IOptions<MongoOptions> options) : MongoDb(options.Value), IManager
 {
     public async ValueTask<UserModel> GetOrCreateUserAsync(UserCreate userCreate)
     {

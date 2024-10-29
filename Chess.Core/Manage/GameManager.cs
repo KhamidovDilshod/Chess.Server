@@ -9,7 +9,7 @@ using MongoDB.Driver;
 
 namespace Chess.Core.Manage;
 
-public class GameManager(IOptions<MongoOptions> options) : BaseManager(options.Value), IManager
+public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value), IManager
 {
     public async ValueTask<GameModel?> InitGameAsync(InitGame init)
     {
