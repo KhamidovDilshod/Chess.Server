@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Chess.Core.Exceptions;
 using Chess.Core.Extensions;
 using Chess.Core.Logic;
 using Chess.Core.Models;
@@ -15,8 +16,6 @@ public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value
     {
         var (game, players) = Game.Init(init);
         var board = new ChessBoard().ChessBoardView;
-
-        game.Id = Guid.NewGuid();
         var gameBoard = new Board
         {
             Id = game.Id,
@@ -40,7 +39,7 @@ public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value
 
     public async ValueTask<GameModel?> AddPlayerAsync(Guid gameId, Player player)
     {
-        var game = await Get(gameId);
+        var game = await GetGame(gameId);
         if (game is null) return null;
         game.Players = await GetAll<GamePlayer>(g => g.GameId == game.Id);
         if (game.TryAddPlayer(player, out var gamePlayer))
@@ -70,39 +69,61 @@ public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value
         return (await GetAll<Move>(move => move.GameId == gameId)).Select(m => m.ToModel()).ToList();
     }
 
-    public async ValueTask<char[][]> MoveAsync(MoveRequest request)
+    public async ValueTask<ReadOnlyMemory<char>> MoveAsync(MoveRequest request)
     {
         var gameId = request.Player.GameId.GetValueOrDefault();
-        var gameBoard = await GetBoardByGameId(gameId);
-        var game = await Get(gameId);
+        var (boardId, boardState) = await GetBoardByGameId(gameId);
 
-        if (game is null || gameBoard.state is null)
+        var game = await GetGame(gameId);
+        if (game is null || boardState is null)
         {
-            throw new Exception("Board not found");
+            throw new GameException(Codes.BoardNotFound);
         }
 
         game.Players = await GetAll<GamePlayer>(g => g.GameId == game.Id);
 
-        string notation = $"prevX:{request.PrevX}-prevY:{request.PrevY},newX:{request.NewX}-newY{request.NewY}";
-        //TODO save Initialized board in cache instead of initializing it from state
-        //Create singleton BoardCacheManager Class Map<gameId,ChessBoard> like map
-        var board = new ChessBoard(gameBoard.state, request.Player.Color);
+        string notation = $"prevX:{request.PrevX}-prevY:{request.PrevY},newX:{request.NewX}-newY:{request.NewY}";
 
+        var board = new ChessBoard(boardState, request.Player.Color);
         board.Move(request.PrevX, request.PrevY, request.NewX, request.NewY);
-        var move = game.AddMove(
-            new AddMove(
-                request.Player.GameId.GetValueOrDefault(),
-                request.Player.UserId,
-                game.LastMove()?.Number ?? 1,
-                notation
-            ));
-        await Add(move);
-        //TODO replace every time board updating on move to save on cache and persist to db in every (x) time(Maybe bad option!)
-        await EnsureBoardUpdated(gameId, gameBoard.id, board);
-        return board.ChessBoardView;
+
+        //TODO move number??
+        var addMove = new AddMove(
+            gameId,
+            request.Player.UserId,
+            1,
+            notation
+        );
+
+        if (game.CanMove(addMove))
+        {
+            var entity = Move.Create(addMove);
+
+            await Add(entity);
+        }
+
+        await EnsureBoardUpdated(gameId, boardId, board);
+        var flatBoard = FlattenChessBoard(board.ChessBoardView);
+
+        return new ReadOnlyMemory<char>(flatBoard);
     }
 
-    private async Task<Game?> Get(Guid id)
+    private static char[] FlattenChessBoard(char[][] chessBoard)
+    {
+        int rows = chessBoard.Length;
+        int cols = chessBoard[0].Length;
+        var flatBoard = new char[rows * cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            Array.Copy(chessBoard[i], 0, flatBoard, i * cols, cols);
+        }
+
+        return flatBoard;
+    }
+
+
+    private async Task<Game?> GetGame(Guid id)
     {
         var game = await Get<Game, Guid>(id);
         return game;
