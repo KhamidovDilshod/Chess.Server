@@ -34,7 +34,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
         var game = await gameManager.GetAsync(player.GameId.GetValueOrDefault()) ??
                    await CreateGameSessionAsync(player);
         game = await gameManager.AddPlayerAsync(game.Id, player);
-        
+
         NullException.ThrowIfNull(game);
         var session = sessionManager.GetSession(game.Id);
 
@@ -51,7 +51,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
         await Groups.AddToGroupAsync(ConnectionId, game.Id.ToString());
 
         sessionManager.AddPlayerToGame(game.Id, player.UserId, Context.ConnectionId);
-        
+
         await Clients.Group(game.Id.ToString()).SendAsync(HubMethods.Joined, game);
     }
 
@@ -74,7 +74,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
             await Clients.Group($"{player.GameId}").SendAsync(HubMethods.Left, player.UserId);
         }
 
-        logger.LogInformation("Player: {player} left Game: {game}", player.UserId, player.GameId);
+        logger.LogInformation("Player: {player} left Game: {game}", player.UserId, player.UserId);
     }
 
     [HubMethodName(HubMethods.Move)]
@@ -90,7 +90,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
 
         if (session.IsPlayerInGame(request.Player.UserId))
         {
-             await gameManager.MoveAsync(request);
+            var game = await gameManager.MoveAsync(request);
             await Clients.Group($"{request.Player.GameId}").SendAsync(HubMethods.Moved, request);
         }
     }

@@ -7,11 +7,12 @@ public class Entity<T> where T : notnull
 {
     [BsonId]
     [BsonRepresentation(BsonType.String)]
-    public required T Id { get; set; }
+    public virtual T Id { get; set; }
 
     public DateTime Date { get; set; } = DateTime.Now;
 }
 
 public class Entity : Entity<Guid>
 {
+    public override  Guid Id { get; set; }=Guid.NewGuid();
 }
