@@ -12,26 +12,18 @@ builder.Services
     .AddManagers();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", b => b
-        .WithOrigins(
-            "http://localhost:4200",
-            "http://localhost:5200",
-            "https://white-dune-0f6592410.5.azurestaticapps.net"
-            )
-        .WithOrigins()
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials());
+    options.AddPolicy(name: "AllowAllOrigins",
+        configurePolicy: policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 builder.Services.AddGoogleAuth(builder.Configuration);
 
 var app = builder.Build();
-app.UseCors("CorsPolicy");
+app.UseCors("AllowAllOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 app.AddGameEndpoints();
 app.AddAuthEndpoints();
-// app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.MapHub<HubBase>("/hub");
 app.MapHub<GameHub>("/game");
 app.Run();

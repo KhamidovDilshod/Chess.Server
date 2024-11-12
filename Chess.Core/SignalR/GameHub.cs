@@ -74,7 +74,7 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
             await Clients.Group($"{player.GameId}").SendAsync(HubMethods.Left, player.UserId);
         }
 
-        logger.LogInformation("Player: {player} left Game: {game}", player.UserId, player.UserId);
+        logger.LogInformation("Player: {player} left Game: {game}", player.UserId, player.GameId);
     }
 
     [HubMethodName(HubMethods.Move)]
@@ -90,8 +90,8 @@ public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, Gam
 
         if (session.IsPlayerInGame(request.Player.UserId))
         {
-            var game = await gameManager.MoveAsync(request);
-            await Clients.Group($"{request.Player.GameId}").SendAsync(HubMethods.Moved, game);
+             await gameManager.MoveAsync(request);
+            await Clients.Group($"{request.Player.GameId}").SendAsync(HubMethods.Moved, request);
         }
     }
 
