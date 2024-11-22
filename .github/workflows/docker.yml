@@ -24,5 +24,5 @@ jobs:
           CONTAINER_NAME: chess
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker build -f ./Chess/Dockerfile -t $DOCKER_USERNAME/$CONTAINER_NAME:latest .
+          docker build -f ./Chess/Dockerfile -t $DOCKER_USERNAME/chess:latest .
           docker push $DOCKER_USERNAME/$CONTAINER_NAME:latest
