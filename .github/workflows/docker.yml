@@ -9,14 +9,20 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        env:
-          DOCKER_PASSWORD: ${{secrets.DOCKER_PASWORD}}
-          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+      - name: Checkout source code
         uses: actions/checkout@v2
 
-      - name: Build and push Docker image
+      - name: Set up Docker credentials
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker build -t $DOCKER_USERNAME/$CONTAINER_NAME:dev .
-          echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USERNNAME --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      - name: Build and push Docker image
+        env:
+          CONTAINER_NAME: chess  # Replace with your container name
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          docker build -t $DOCKER_USERNAME/$CONTAINER_NAME:latest .
           docker push $DOCKER_USERNAME/$CONTAINER_NAME:latest
