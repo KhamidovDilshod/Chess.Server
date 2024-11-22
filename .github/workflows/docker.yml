@@ -1,0 +1,22 @@
+name: Push image to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        env:
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASWORD}}
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+        uses: actions/checkout@v2
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t $DOCKER_USERNAME/$CONTAINER_NAME:dev .
+          echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USERNNAME --password-stdin
+          docker push $DOCKER_USERNAME/$CONTAINER_NAME:latest
