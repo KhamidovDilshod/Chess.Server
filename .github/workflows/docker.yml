@@ -21,8 +21,8 @@ jobs:
 
       - name: Build and push Docker image
         env:
-          CONTAINER_NAME: chess  # Replace with your container name
+          CONTAINER_NAME: chess
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker build -t $DOCKER_USERNAME/$CONTAINER_NAME:latest .
+          docker build -f ./Chess/Dockerfile -t $DOCKER_USERNAME/$CONTAINER_NAME:latest .
           docker push $DOCKER_USERNAME/$CONTAINER_NAME:latest
