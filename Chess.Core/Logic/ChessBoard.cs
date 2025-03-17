@@ -21,7 +21,7 @@ public class ChessBoard
     {
         _chessBoard = state is null ? NewBoard() : LoadFromChar(state);
         _playerColor = color.GetValueOrDefault();
-        _safeSquares = FindSafeSquares().ConfigureAwait(true).GetAwaiter().GetResult();
+        _safeSquares = FindSafeSquares();
     }
 
     public void Move(int prevX, int prevY, int newX, int newY)
@@ -46,11 +46,10 @@ public class ChessBoard
         _playerColor = _playerColor == Color.White ? Color.Black : Color.White;
 
         IsInCheck(_playerColor, true);
-        _safeSquares = FindSafeSquares().ConfigureAwait(true).GetAwaiter().GetResult();
+        _safeSquares = FindSafeSquares();
     }
 
-    private Task<Dictionary<string, Coords[]>> FindSafeSquares()
-        => Task.Run(() =>
+    private Dictionary<string, Coords[]> FindSafeSquares()
         {
             var safeSquares = new Dictionary<string, Coords[]>();
 
@@ -116,7 +115,7 @@ public class ChessBoard
             }
 
             return safeSquares;
-        });
+        }
 
     private bool IsInCheck(Color playerColor, bool checkingCurrentPosition)
     {

@@ -21,7 +21,7 @@ public class HubBase(ILogger<HubBase> logger) : Hub
 
     public override async Task OnConnectedAsync()
     {
-        string name = Context.User.Identity?.Name ?? string.Empty;
+        string name = Context.User?.Identity?.Name ?? string.Empty;
         _connections.Add(name, ConnectionId);
         Logger.LogInformation("Client with Id:'{clientId}' connected", ConnectionId);
         await SendMessage(name, "Connected");
@@ -29,9 +29,9 @@ public class HubBase(ILogger<HubBase> logger) : Hub
         await base.OnConnectedAsync();
     }
 
-    public override Task OnDisconnectedAsync(Exception exception)
+    public override Task OnDisconnectedAsync(Exception? exception)
     {
-        string name = Context.User.Identity?.Name ?? string.Empty;
+        string name = Context.User?.Identity?.Name ?? string.Empty;
         _connections.Remove(name, ConnectionId);
         Logger.LogInformation("Client wit Id: '{clientId}' disconnected'", ConnectionId);
         return base.OnDisconnectedAsync(exception);

@@ -2,11 +2,13 @@ using Chess.Core.Constants;
 using Chess.Core.Extensions;
 using Chess.Core.Manage;
 using Chess.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace Chess.Core.SignalR;
 
+[Authorize]
 public class GameHub(ILogger<HubBase> logger, SessionManager sessionManager, GameManager gameManager) : HubBase(logger)
 {
     [Obsolete("Recommended to use endpoint: 'game/init'")]

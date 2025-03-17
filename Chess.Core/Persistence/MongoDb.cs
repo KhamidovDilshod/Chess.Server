@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
 using Chess.Core.Persistence.Entities;
 using MongoDB.Driver;
 
@@ -10,11 +9,6 @@ public abstract class MongoDb(MongoOptions settings)
 {
     private readonly IMongoDatabase _database =
         new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);
-
-    protected readonly JsonSerializerOptions JsonSerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
 
     protected IMongoCollection<TSet> Set<TSet>() =>
         _database.GetCollection<TSet>(GetCollectionName(typeof(TSet)));

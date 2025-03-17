@@ -1,3 +1,4 @@
+using Chess;
 using Chess.Core.Extensions;
 using Chess.Core.SignalR;
 using Chess.Endpoints;
@@ -10,6 +11,8 @@ builder.Host.UseSerilog(ServiceRegistrationExt.ConfigureLogging);
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddManagers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IIdentityProvider, IdentityProvider>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", b => b
@@ -23,6 +26,8 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowCredentials());
 });
+builder.Services.AddAuthentication();
+
 builder.Services.AddGoogleAuth(builder.Configuration);
 
 var app = builder.Build();
@@ -33,5 +38,5 @@ app.AddGameEndpoints();
 app.AddAuthEndpoints();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.MapHub<HubBase>("/hub");
-app.MapHub<GameHub>("/game");
+app.MapHub<GameHub>("/hub/game");
 app.Run();
