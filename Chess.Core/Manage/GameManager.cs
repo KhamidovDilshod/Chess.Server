@@ -12,7 +12,7 @@ namespace Chess.Core.Manage;
 
 public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value), IManager
 {
-    public async ValueTask<GameModel?> InitGameAsync(InitGame init)
+    public async ValueTask<GameModel> InitGameAsync(InitGame init)
     {
         var (game, players) = Game.Init(init);
         var board = new ChessBoard().ChessBoardView;
@@ -28,7 +28,7 @@ public class GameManager(IOptions<MongoOptions> options) : MongoDb(options.Value
 
         await Add(game);
         await Add(gameBoard);
-        return await GetAsync(game.Id);
+        return await GetAsync(game.Id)?? throw new Exception("Null game on initialization");
     }
 
     public async ValueTask<GameModel?> GetAsync(Guid gameId)

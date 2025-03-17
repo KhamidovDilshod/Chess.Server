@@ -94,16 +94,39 @@ public static class ServiceRegistrationExt
         };
 
     public static void AddGoogleAuth(this IServiceCollection services, IConfiguration configuration)
-        => services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    {
+        var googleIssuer = "https://accounts.google.com";
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                options.Authority = googleIssuer;
+                options.Audience = configuration["ValidAudience"];
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = configuration["ValidIssuer"],
+                    ValidIssuer = googleIssuer,
                     ValidateAudience = true,
                     ValidAudience = configuration["ValidAudience"],
+                    ValidateLifetime = false,
                     ClockSkew = TimeSpan.Zero
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
+                        {
+                            Console.WriteLine("Authed request via hub");
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
+    }
 }
